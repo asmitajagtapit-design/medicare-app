@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <!-- Critical: prevents mobile zoom/blur -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="MediCare"/>
+  <meta name="theme-color" content="#0d1f3c"/>
+  <title>MediCare – Medicine Reminder</title>
+  <link rel="manifest" href="/manifest.json"/>
+
+  <!-- jQuery Mobile CSS -->
+  <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"/>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <!-- App Styles -->
+  <link rel="stylesheet" href="style.css"/>
+
+  <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════ PAGE: LOGIN ══════════════ -->
+<div data-role="page" id="page-login" data-theme="a">
+  <div data-role="content" style="padding:0">
+    <div class="login-page">
+      <div class="login-logo">💊</div>
+      <div class="login-title">MediCare</div>
+      <div class="login-sub">Your personal medicine reminder</div>
+
+      <div class="login-card">
+        <div class="login-tabs">
+          <button class="login-tab active" id="tab-signin">Sign In</button>
+          <button class="login-tab" id="tab-signup">Sign Up</button>
+        </div>
+
+        <div id="login-err" class="login-err"></div>
+
+        <div class="login-form" id="signin-form">
+          <input type="text"     id="si-user" placeholder="Username" autocomplete="username" autocorrect="off" autocapitalize="none"/>
+          <input type="password" id="si-pass" placeholder="Password" autocomplete="current-password"/>
+          <button class="btn-login" id="btn-signin">Sign In →</button>
+        </div>
+
+        <div class="login-form" id="signup-form" style="display:none">
+          <input type="text"     id="su-name" placeholder="Full Name" autocorrect="off"/>
+          <input type="text"     id="su-user" placeholder="Username (no spaces)" autocomplete="username" autocorrect="off" autocapitalize="none"/>
+          <input type="password" id="su-pass" placeholder="Password (min 4 chars)" autocomplete="new-password"/>
+          <button class="btn-login" id="btn-signup">Create Account →</button>
+        </div>
+
+        <div style="margin-top:14px;text-align:center;font-size:.75rem;color:var(--muted)">
+          🔒 Your data is stored privately on this device
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE: HOME ══════════════ -->
+<div data-role="page" id="page-home">
+  <div data-role="header" data-position="fixed" style="position:relative">
+    <h1>💊 MediCare</h1>
+    <button class="user-chip" id="btn-logout">👤 <span id="header-username"></span> ↩</button>
+  </div>
+  <div data-role="content">
+    <div id="server-banner" class="server-banner"></div>
+    <div class="hero-strip">
+      <h2 id="greet-text">Good Morning!</h2>
+      <p id="date-text">Loading…</p>
+    </div>
+    <div class="section-label">Today's Overview</div>
+    <div class="summary-bar">
+      <div class="summary-chip chip-teal"><div class="val" id="count-total">0</div><div class="lbl">Total</div></div>
+      <div class="summary-chip chip-teal"><div class="val" id="count-taken">0</div><div class="lbl">Taken</div></div>
+      <div class="summary-chip chip-danger"><div class="val" id="count-missed">0</div><div class="lbl">Missed</div></div>
+      <div class="summary-chip chip-warn"><div class="val" id="count-upcoming">0</div><div class="lbl">Due</div></div>
+    </div>
+    <div class="section-label">Today's Medicines</div>
+    <div id="med-list-container">
+      <div class="empty-state"><div class="emoji">🌿</div><p>No medicines today.<br>Tap <strong>Add</strong> to get started.</p></div>
+    </div>
+  </div>
+  <div data-role="footer" data-position="fixed">
+    <div data-role="navbar"><ul>
+      <li><a href="#page-home"     class="ui-btn-active" data-icon="home">Home</a></li>
+      <li><a href="#page-add"      data-icon="plus">Add</a></li>
+      <li><a href="#page-calendar" data-icon="grid">Calendar</a></li>
+      <li><a href="#page-history"  data-icon="clock">History</a></li>
+      <li><a href="#page-settings" data-icon="gear">Settings</a></li>
+    </ul></div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE: ADD ══════════════ -->
+<div data-role="page" id="page-add">
+  <div data-role="header" data-position="fixed"><h1>➕ Add Medicine</h1></div>
+  <div data-role="content">
+    <div class="hero-strip" style="padding:16px 18px 14px">
+      <h2 style="font-size:1.1rem">New Reminder</h2>
+      <p>Schedule your medicine with date range.</p>
+    </div>
+    <div style="height:12px"></div>
+    <div id="form-error" class="form-error"></div>
+    <div class="form-card">
+      <label for="inp-name">Medicine Name *</label>
+      <input type="text" id="inp-name" placeholder="e.g. Paracetamol 500mg" autocorrect="off"/>
+      <label for="inp-dose">Dosage *</label>
+      <input type="text" id="inp-dose" placeholder="e.g. 1 tablet" autocorrect="off"/>
+      <label for="inp-time">Reminder Time * <span style="font-weight:400;text-transform:none;font-size:.7rem;color:var(--muted)">(e.g. 8:30 AM)</span></label>
+      <input type="text" id="inp-time" placeholder="e.g. 8:30 AM" autocorrect="off" autocomplete="off"/>
+      <label for="inp-type">Medicine Type</label>
+      <select id="inp-type">
+        <option value="💊">💊 Tablet</option>
+        <option value="🧴">🧴 Syrup</option>
+        <option value="💉">💉 Injection</option>
+        <option value="🩹">🩹 Patch</option>
+        <option value="👁️">👁️ Eye Drop</option>
+      </select>
+      <label for="inp-start">Start Date</label>
+      <input type="date" id="inp-start"/>
+      <label for="inp-end">End Date</label>
+      <input type="date" id="inp-end"/>
+      <label for="inp-notes">Notes (optional)</label>
+      <input type="text" id="inp-notes" placeholder="e.g. Take after food" autocorrect="off"/>
+      <button class="btn-add" id="btn-save-med">💊 Add Reminder</button>
+    </div>
+  </div>
+  <div data-role="footer" data-position="fixed">
+    <div data-role="navbar"><ul>
+      <li><a href="#page-home"     data-icon="home">Home</a></li>
+      <li><a href="#page-add"      class="ui-btn-active" data-icon="plus">Add</a></li>
+      <li><a href="#page-calendar" data-icon="grid">Calendar</a></li>
+      <li><a href="#page-history"  data-icon="clock">History</a></li>
+      <li><a href="#page-settings" data-icon="gear">Settings</a></li>
+    </ul></div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE: CALENDAR ══════════════ -->
+<div data-role="page" id="page-calendar">
+  <div data-role="header" data-position="fixed"><h1>📅 Calendar</h1></div>
+  <div data-role="content">
+    <div class="hero-strip" style="padding:16px 18px 14px">
+      <h2 style="font-size:1.1rem" id="cal-month-title">Loading…</h2>
+      <p>Tap a date to see scheduled medicines.</p>
+    </div>
+    <div class="cal-nav">
+      <button class="cal-nav-btn" id="cal-prev">‹ Prev</button>
+      <span id="cal-nav-label" style="font-weight:800;color:var(--navy);font-size:.9rem"></span>
+      <button class="cal-nav-btn" id="cal-next">Next ›</button>
+    </div>
+    <div class="cal-legend">
+      <span class="leg-item"><span class="leg-dot" style="background:var(--teal)"></span>Taken</span>
+      <span class="leg-item"><span class="leg-dot" style="background:var(--danger)"></span>Missed</span>
+      <span class="leg-item"><span class="leg-dot" style="background:var(--warn)"></span>Scheduled</span>
+    </div>
+    <div class="cal-grid-wrap">
+      <div class="cal-dow-row">
+        <div class="cal-dow">Su</div><div class="cal-dow">Mo</div><div class="cal-dow">Tu</div>
+        <div class="cal-dow">We</div><div class="cal-dow">Th</div><div class="cal-dow">Fr</div>
+        <div class="cal-dow">Sa</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div id="cal-day-label" style="display:none" class="section-label">
+      Medicines for <span id="cal-selected-date" style="color:var(--teal)"></span>
+    </div>
+    <div id="cal-day-detail"></div>
+  </div>
+  <div data-role="footer" data-position="fixed">
+    <div data-role="navbar"><ul>
+      <li><a href="#page-home"     data-icon="home">Home</a></li>
+      <li><a href="#page-add"      data-icon="plus">Add</a></li>
+      <li><a href="#page-calendar" class="ui-btn-active" data-icon="grid">Calendar</a></li>
+      <li><a href="#page-history"  data-icon="clock">History</a></li>
+      <li><a href="#page-settings" data-icon="gear">Settings</a></li>
+    </ul></div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE: HISTORY ══════════════ -->
+<div data-role="page" id="page-history">
+  <div data-role="header" data-position="fixed"><h1>📋 History</h1></div>
+  <div data-role="content">
+    <div class="hero-strip" style="padding:16px 18px 14px">
+      <h2 style="font-size:1.1rem">Intake Log</h2>
+      <p>Your complete medicine-taking history.</p>
+    </div>
+    <div class="section-label">Recent Records</div>
+    <div id="history-container">
+      <div class="empty-state"><div class="emoji">📭</div><p>No history yet.</p></div>
+    </div>
+  </div>
+  <div data-role="footer" data-position="fixed">
+    <div data-role="navbar"><ul>
+      <li><a href="#page-home"     data-icon="home">Home</a></li>
+      <li><a href="#page-add"      data-icon="plus">Add</a></li>
+      <li><a href="#page-calendar" data-icon="grid">Calendar</a></li>
+      <li><a href="#page-history"  class="ui-btn-active" data-icon="clock">History</a></li>
+      <li><a href="#page-settings" data-icon="gear">Settings</a></li>
+    </ul></div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE: SETTINGS ══════════════ -->
+<div data-role="page" id="page-settings">
+  <div data-role="header" data-position="fixed"><h1>⚙️ Settings</h1></div>
+  <div data-role="content">
+    <div class="hero-strip" style="padding:16px 18px 14px">
+      <h2 style="font-size:1.1rem">Preferences</h2>
+      <p>Logged in as: <strong id="settings-username" style="color:var(--teal)"></strong></p>
+    </div>
+
+    <div class="section-label">Alarm</div>
+    <div class="setting-row">
+      <div><div class="s-title">Alarm Sound</div><div class="s-sub">Sound when dose is due</div></div>
+      <div class="toggle on" id="tog-alarm"></div>
+    </div>
+    <div class="setting-row">
+      <div><div class="s-title">Snooze (10 min)</div><div class="s-sub">Remind again later</div></div>
+      <div class="toggle on" id="tog-snooze"></div>
+    </div>
+    <div style="padding:0 12px 10px">
+      <button id="btn-test-alarm" style="width:100%;padding:13px;background:linear-gradient(135deg,#0ec4a8,#09a48c);color:#fff;border:none;border-radius:12px;font-family:Nunito,sans-serif;font-size:.92rem;font-weight:800;cursor:pointer;">🔔 Test Alarm Sound</button>
+    </div>
+
+    <div class="section-label">Install App</div>
+    <div style="padding:0 12px 10px">
+      <button id="btn-install-app" style="width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:12px;font-family:Nunito,sans-serif;font-size:.92rem;font-weight:800;cursor:pointer;">📲 Install on Home Screen</button>
+    </div>
+    <div class="setting-row" style="margin-top:0">
+      <div><div class="s-title" style="color:var(--muted)">iOS Safari</div><div class="s-sub">Tap Share → "Add to Home Screen"</div></div>
+      <span style="font-size:1.1rem">🍎</span>
+    </div>
+
+    <div class="section-label">Data</div>
+    <div class="setting-row" id="btn-clear-all" style="cursor:pointer">
+      <div><div class="s-title" style="color:var(--danger)">Clear My Medicines</div><div class="s-sub">Remove all your reminders</div></div>
+      <span style="color:var(--danger);font-size:1.3rem">›</span>
+    </div>
+    <div class="setting-row" id="btn-clear-hist" style="cursor:pointer">
+      <div><div class="s-title" style="color:var(--muted)">Clear History</div><div class="s-sub">Remove your log entries</div></div>
+      <span style="color:var(--muted);font-size:1.3rem">›</span>
+    </div>
+    <div class="setting-row" id="btn-logout-settings" style="cursor:pointer">
+      <div><div class="s-title" style="color:var(--danger)">Log Out</div><div class="s-sub">Return to login screen</div></div>
+      <span style="color:var(--danger);font-size:1.3rem">›</span>
+    </div>
+
+    <div class="section-label">About</div>
+    <div class="setting-row">
+      <div><div class="s-title">MediCare v4.0</div><div class="s-sub">PWA · Per-user data · Alarm system</div></div>
+      <span>💊</span>
+    </div>
+  </div>
+  <div data-role="footer" data-position="fixed">
+    <div data-role="navbar"><ul>
+      <li><a href="#page-home"     data-icon="home">Home</a></li>
+      <li><a href="#page-add"      data-icon="plus">Add</a></li>
+      <li><a href="#page-calendar" data-icon="grid">Calendar</a></li>
+      <li><a href="#page-history"  data-icon="clock">History</a></li>
+      <li><a href="#page-settings" class="ui-btn-active" data-icon="gear">Settings</a></li>
+    </ul></div>
+  </div>
+</div>
+
+<!-- PWA Install Banner -->
+<div id="install-banner">
+  <div>
+    <div class="ib-text">📲 Install MediCare App</div>
+    <div class="ib-sub">Add to home screen for best experience</div>
+  </div>
+  <button class="btn-install" id="btn-install-banner">Install</button>
+  <button class="btn-install-close" id="btn-install-close">✕</button>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
